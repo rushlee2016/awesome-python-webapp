@@ -303,7 +303,7 @@ class Model(dict):
                 if not hasattr(self, k):
                     setattr(self, k, v.default)
                 params[v.name] = getattr(self, k)
-        db.insert(self.__teble__, **params)
+        db.insert(self.__table__, **params)
         return self
 
 if __name__=='__main__':
