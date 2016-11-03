@@ -1452,7 +1452,7 @@ class WSGIApplication(object):
         self._interceptors.append(func)
         logging.info('Add interceptor: %s' % str(func))
 
-    def run(self, port=8000, host='127.0.0.1'):
+    def run(self, port=9000, host='127.0.0.1'):
         from wsgiref.simple_server import make_server
         logging.info('application (%s) will start at %s:%s...' % (self._document_root, host, port))
         server = make_server(host, port, self.get_wsgi_application(debug=True))
