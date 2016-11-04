@@ -100,7 +100,7 @@ def _gen_sql(table_name, mappings):
     sql = ['-- generating SQL for %s:' % table_name, 'create table `%s` (' % table_name]
     for f in sorted(mappings.values(), lambda x, y: cmp(x._order, y._order)):
         if not hasattr(f, 'ddl'):
-            raise StandardError('no ddl in field "%s".' % f)
+            raise StandardError('no ddl in field "%s".' % n)
         ddl = f.ddl
         nullable = f.nullable
         if f.primary_key:
@@ -303,7 +303,7 @@ class Model(dict):
                 if not hasattr(self, k):
                     setattr(self, k, v.default)
                 params[v.name] = getattr(self, k)
-        db.insert(self.__table__, **params)
+        db.insert('%s' % self.__table__, **params)
         return self
 
 if __name__=='__main__':
