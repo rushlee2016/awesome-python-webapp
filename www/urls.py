@@ -7,11 +7,19 @@ import os, re, time, base64, hashlib, logging
 
 from transwarp.web import get, post, ctx, view, interceptor, seeother, notfound
 from models import User, Blog, Comment
-from apis import api, APIValueError, APIError, APIPermissionError, APIResourceNotFoundError
+from apis import api, APIValueError, APIError, APIPermissionError, APIResourceNotFoundError, Page
 from config import configs
 
 _COOKIE_NAME = 'awesession'
 _COOKIE_KEY = configs.session.secret
+
+def _get_page_index():
+    page_index = 1
+    try:
+        page_index = int(ctx.request.get('page', '1'))
+    except ValueError:
+        pass
+    return page_index
 
 def make_signed_cookie(id, password, max_age):
     # build cookie string by: id-expires-md5
@@ -62,6 +70,12 @@ def manage_interceptor(next):
         return next()
     raise seeother('/signin')
 
+def _get_blogs_by_page():
+    total = Blog.count_all()
+    page = Page(total, _get_page_index())
+    blogs = Blog.find_by('order by created_at desc limit ?,?', page.offset, page.limit)
+    return blogs, page
+
 @view('blogs.html')
 @get('/')
 def index():
@@ -97,15 +111,6 @@ def authenticate():
     user.password = '******'
     return user
 
-@api
-@get('/api/users')
-def api_get_users():
-    users = User.find_by('order by created_at desc')
-    # 把用户的口令隐藏掉:
-    for u in users:
-        u.password = '******'
-    return dict(users=users)
-
 _RE_EMAIL = re.compile(r'^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$')
 _RE_MD5 = re.compile(r'^[0-9a-f]{32}$')
 
@@ -136,3 +141,50 @@ def register_user():
 @get('/register')
 def register():
     return dict()
+
+@view('manage_blog_list.html')
+@get('/manage/blogs')
+def manage_blogs():
+    return dict(page_index=_get_page_index(), user=ctx.request.user)
+
+@view('manage_blog_edit.html')
+@get('/manage/blogs/create')
+def manage_blogs_create():
+    return dict(id=None, action='/api/blogs', redirect='/manage/blogs', user=ctx.request.user)
+
+@api
+@get('/api/blogs')
+def api_get_blogs():
+    format = ctx.request.get('format', '')
+    blogs, page = _get_blogs_by_page()
+    if format=='html':
+        for blog in blogs:
+            blog.content = markdown2.markdown(blog.content)
+    return dict(blogs=blogs, page=page)
+
+@api
+@post('/api/blogs')
+def api_create_blog():
+    check_admin()
+    i = ctx.request.input(name='', summary='', content='')
+    name = i.name.strip()
+    summary = i.summary.strip()
+    content = i.content.strip()
+    if not name:
+        raise APIValueError('name', 'name cannot be empty.')
+    if not summary:
+        raise APIValueError('summary', 'summary cannot be empty.')
+    if not content:
+        raise APIValueError('content', 'content cannot be empty.')
+    user = ctx.request.user
+    blog = Blog(user_id=user.id, user_name=user.name, name=name, summary=summary, content=content)
+    blog.insert()
+    return blog
+
+@api
+@get('/api/users')
+def api_get_users():
+    users = User.find_by('order by created_at desc')
+    for u in users:
+        u.password = '******'
+    return dict(users=users)
