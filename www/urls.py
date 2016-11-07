@@ -87,9 +87,9 @@ def authenticate():
     remember = i.remember
     user = User.find_first('where email=?', email)
     if user is None:
-        raise APIError('auth:failed', 'email', 'Invalid email.')
+        raise APIError('auth:failed', 'email or password', 'Invalid email or password.')
     elif user.password != password:
-        raise APIError('auth:failed', 'password', 'Invalid password.')
+        raise APIError('auth:failed', 'email or password', 'Invalid email or password.')
     # make session cookie:
     max_age = 604800 if remember=='true' else None
     cookie = make_signed_cookie(user.id, user.password, max_age)
