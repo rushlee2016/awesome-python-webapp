@@ -52,7 +52,7 @@ def start_watch(path, callback):
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
-    
+
 if __name__ == '__main__':
     argv = sys.argv[1:]
     if not argv:

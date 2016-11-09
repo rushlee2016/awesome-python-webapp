@@ -3,7 +3,12 @@
 
 __author__ = "lichong"
 
-import logging
+'''
+Database operation module. This module is independent with web module.
+'''
+
+import time, logging
+
 import db
 
 class Field(object):
