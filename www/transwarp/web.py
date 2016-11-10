@@ -7,7 +7,7 @@ A simple, lightweight, WSGI-compatible web framework.
 
 __author__ = 'lichong'
 
-import types, os, re, cgi, sys, datetime, functools, mimetypes, threading, logging, urllib, traceback
+import types, os, re, cgi, sys, time, datetime, functools, mimetypes, threading, logging, urllib, traceback
 
 try:
     from cStringIO import StringIO
